@@ -3,7 +3,13 @@
 Este proyecto es la solución a la prueba técnica alojada en el repositorio https://github.com/adriancataland/senior-java-tech-challenge.git, consta de una **API REST** desarrollada con **Spring Boot**, enfocada en la gestión de productos y sus precios asociados. Incluye operaciones de CRUD para productos y precios, con validaciones de negocio, y documentación automática mediante **Springdoc OpenAPI**.
 
 ---
+## Requisitos previos
 
+- **Java 21** instalado y configurado en el PATH.
+- **Gradle** instalado para compilar y ejecutar el proyecto.
+- **PostgreSQL** en ejecución con la base de datos `productsdb` creada.
+- Usuario de PostgreSQL con permisos de lectura/escritura (configurado en `application.yml`).
+---
 ## Instrucciones para compilar y ejecutar
 
 ### 1. Clona el repositorio:
@@ -66,6 +72,9 @@ products/build/reports/tests/test/packages/mango.challenge.products.service.html
 ### Springdoc OpenAPI 2.8.13
 - Genera documentación automática de la API, compatible con Spring Boot 3.5.5 y evitando errores de incompatibilidad.
 
+### Flyway
+- Muy útil para gestionar la evolución de la base de datos de forma automática y controlada. Permite versionar la estructura y los datos iniciales mediante scripts numerados, garantizando que todos los entornos (desarrollo, pruebas y producción) tengan la misma configuración.
+
 ### Decisiones de diseño de la API
 - Validaciones de negocio robustas (fechas, solapamientos, existencia de entidad).  
 - Manejo de errores mediante excepciones con mensajes claros para facilitar depuración.
@@ -75,6 +84,7 @@ products/build/reports/tests/test/packages/mango.challenge.products.service.html
 ### Mejoras y supuestos
 - Cada precio pertenece a un único producto.
 - Manejo de errores centralizado y claro.
+- Carga de ejemplos en la base de datos para simplificar las pruebas.
 - Configuración lista para PostgreSQL con posibilidad de cambiar base de datos fácilmente.
 
 
