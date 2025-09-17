@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import mango.challenge.products.dto.PriceRequest;
 import mango.challenge.products.dto.PriceResponse;
+import mango.challenge.products.exception.ResourceNotFoundException;
 import mango.challenge.products.model.Price;
 import mango.challenge.products.model.Product;
 import mango.challenge.products.repository.PriceRepository;
@@ -22,7 +23,12 @@ public class PriceService {
     private final ProductService productService;
 
     public PriceResponse addPrice(Long productId, PriceRequest priceRequest) {
-        Product product = productService.getProductById(productId);
+        Product product;
+        try {
+            product = productService.getProductById(productId);
+        }catch (Exception e){
+            throw new ResourceNotFoundException("Producto no encontrado");
+        }
 
         // Validación de fechas
         if (priceRequest.getEndDate() != null && priceRequest.getInitDate().isAfter(priceRequest.getEndDate())) {
@@ -47,9 +53,9 @@ public class PriceService {
 
     public List<PriceResponse> getPrices(Long productId) {
         try {
-            Product product = productService.getProductById(productId);
+            productService.getProductById(productId);
         }catch (Exception e){
-            throw new IllegalArgumentException("Producto no encontrado");
+            throw new ResourceNotFoundException("Producto no encontrado");
         }
 
         List<Price> prices = priceRepository.findByProductId(productId);
@@ -60,9 +66,9 @@ public class PriceService {
 
     public PriceResponse getPriceAtDate(Long productId, LocalDate date) {
         try {
-            Product product = productService.getProductById(productId);
+            productService.getProductById(productId);
         }catch (Exception e){
-            throw new IllegalArgumentException("Producto no encontrado");
+            throw new ResourceNotFoundException("Producto no encontrado");
         }
 
         List<Price> prices = priceRepository.findByProductId(productId);
@@ -80,14 +86,14 @@ public class PriceService {
         try {
             product = productService.getProductById(productId);
         }catch (Exception e){
-            throw new IllegalArgumentException("Producto no encontrado");
+            throw new ResourceNotFoundException("Producto no encontrado");
         }
 
         Price existingPrice = priceRepository.findById(priceId)
-                .orElseThrow(() -> new IllegalArgumentException("Precio no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Precio no encontrado"));
 
         if (!product.getPrices().contains(existingPrice)) {
-            throw new IllegalArgumentException("El precio no pertenece al producto");
+            throw new ResourceNotFoundException("El precio no pertenece al producto");
         }
 
         if (priceRequest.getValue() != null) {
@@ -123,7 +129,7 @@ public class PriceService {
     public void deletePrice(Long productId, Long priceId) {
         int deletedCount = priceRepository.deleteByIdAndProductId(priceId, productId);
         if (deletedCount == 0) {
-            throw new IllegalArgumentException("Precio no encontrado para el producto especificado");
+            throw new ResourceNotFoundException("Precio no encontrado para el producto especificado");
         }
     }
 

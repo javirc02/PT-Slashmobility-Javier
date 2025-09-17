@@ -2,6 +2,7 @@ package mango.challenge.products.service;
 
 import mango.challenge.products.dto.ProductRequest;
 import mango.challenge.products.dto.ProductResponse;
+import mango.challenge.products.exception.ResourceNotFoundException;
 import mango.challenge.products.model.Product;
 import mango.challenge.products.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,7 +76,7 @@ public class ProductServiceTest {
         when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> productService.getProductById(99L))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Producto no encontrado");
     }
 

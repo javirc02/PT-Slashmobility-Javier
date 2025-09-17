@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import mango.challenge.products.dto.ProductRequest;
 import mango.challenge.products.dto.ProductResponse;
+import mango.challenge.products.exception.ResourceNotFoundException;
 import mango.challenge.products.model.Product;
 import mango.challenge.products.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class ProductService {
 
     public Product getProductById(Long id) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
     }
 
     public ProductResponse getProductResponseById(Long id) {

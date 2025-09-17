@@ -2,6 +2,7 @@ package mango.challenge.products.service;
 
 import mango.challenge.products.dto.PriceRequest;
 import mango.challenge.products.dto.PriceResponse;
+import mango.challenge.products.exception.ResourceNotFoundException;
 import mango.challenge.products.model.Price;
 import mango.challenge.products.model.Product;
 import mango.challenge.products.repository.PriceRepository;
@@ -11,7 +12,6 @@ import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -163,7 +163,7 @@ public class PriceServiceTest {
                 .build();
 
         assertThatThrownBy(() -> priceService.addPrice(99L, dto))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Producto no encontrado");
     }
 
@@ -227,7 +227,7 @@ public class PriceServiceTest {
                 .thenThrow(new IllegalArgumentException("Producto no encontrado"));
 
         assertThatThrownBy(() -> priceService.getPriceAtDate(99L, LocalDate.of(2025, 9, 5)))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Producto no encontrado");
     }
 
@@ -237,7 +237,7 @@ public class PriceServiceTest {
                 .thenThrow(new IllegalArgumentException("Producto no encontrado"));
 
         assertThatThrownBy(() -> priceService.getPrices(99L))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Producto no encontrado");
     }
 
@@ -348,7 +348,7 @@ public class PriceServiceTest {
         PriceRequest dto = PriceRequest.builder().value(BigDecimal.valueOf(50)).build();
 
         assertThatThrownBy(() -> priceService.updatePrice(1L, 1L, dto))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Producto no encontrado");
     }
 
@@ -361,7 +361,7 @@ public class PriceServiceTest {
         PriceRequest dto = PriceRequest.builder().value(BigDecimal.valueOf(50)).build();
 
         assertThatThrownBy(() -> priceService.updatePrice(1L, 1L, dto))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Precio no encontrado");
     }
 
@@ -375,7 +375,7 @@ public class PriceServiceTest {
         PriceRequest dto = PriceRequest.builder().value(BigDecimal.valueOf(50)).build();
 
         assertThatThrownBy(() -> priceService.updatePrice(1L, 2L, dto))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("El precio no pertenece al producto");
     }
 
@@ -393,7 +393,7 @@ public class PriceServiceTest {
         when(priceRepository.deleteByIdAndProductId(1L, 1L)).thenReturn(0);
 
         assertThatThrownBy(() -> priceService.deletePrice(1L, 1L))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Precio no encontrado para el producto especificado");
     }
 }
