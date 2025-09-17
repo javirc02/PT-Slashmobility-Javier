@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/products/{productId}/prices")
+@RequestMapping("/v1/products/{productId}/prices")
 @RequiredArgsConstructor
 public class PriceController {
 

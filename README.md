@@ -15,7 +15,7 @@ Este proyecto es la solución a la prueba técnica alojada en el repositorio htt
 ### 1. Clona el repositorio:
 
 ```bash
-git clone https://github.com/javirc02/senior-java-tech-challenge-mango
+git clone https://github.com/javirc02/PT-Slashmobility-Javier.git
 cd senior-java-tech-challenge-mango
 ```
 ### 2. Compila y ejecuta el proyecto usando Gradle:
@@ -83,6 +83,8 @@ products/build/reports/tests/test/packages/mango.challenge.products.service.html
 - Manejo de errores mediante excepciones con mensajes claros para facilitar depuración.
 - Los endpoints de consulta de productos y precios incluyen los IDs correspondientes, permitiendo al usuario de la API identificar cada recurso y utilizarlos para llamar a otros endpoints relacionados.
 - Se utilizó **PATCH** para actualizar precios parcialmente sin sobrescribir otros campos.  
+- Se ha definido versionado de los endpoints a nivel controlador, añadiendo en el ```@RequestMapping``` de cada controlador el número de versión. Por ejemplo la ruta para los products sería ```/api/v1/products```. 
+  Esto permite que todos los endpoints de ese controlador vayan sobre la misma versión. En caso de que sea necesario modificar un endpoint de manera incompatible con versiones anteriores, se puede crear una nueva versión del controlador, por ejemplo ```/api/v2/products```, sin afectar a los clientes que aún utilizan la versión antigua.
 
 ### Mejoras y supuestos
 - Cada precio pertenece a un único producto.
