@@ -1,0 +1,219 @@
+{
+  "info": {
+    "name": "Product & Price API Tests",
+    "_postman_id": "9c8f4a4f-1234-5678-90ab-cdef12345678",
+    "description": "Colección de Postman para probar todos los endpoints de productos y precios, basada en los tests unitarios.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Productos",
+      "item": [
+        {
+          "name": "Create Product - Success",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type","value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Producto Test\",\n  \"description\": \"Descripción de prueba\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/v1/products",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["v1","products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product - Fail (name null)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type","value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": null,\n  \"description\": \"Descripción de prueba\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/v1/products",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["v1","products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/v1/products",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["v1","products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product By Id - Success",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/v1/products/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["v1","products","1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product By Id - Fail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/v1/products/999",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["v1","products","999"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Precios",
+      "item": [
+        {
+          "name": "Add Price - Consecutive Dates",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type","value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": 100.0,\n  \"initDate\": \"2025-10-01\",\n  \"endDate\": \"2025-10-10\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/v1/products/1/prices",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["v1","products","1","prices"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Price - EndDate Null",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type","value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": 200.0,\n  \"initDate\": \"2025-11-01\",\n  \"endDate\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/v1/products/1/prices",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["v1","products","1","prices"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Price - Overlap",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type","value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": 150.0,\n  \"initDate\": \"2025-10-05\",\n  \"endDate\": \"2025-10-15\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/v1/products/1/prices",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["v1","products","1","prices"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Prices - No Filters",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/v1/products/1/prices",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["v1","products","1","prices"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Prices - Date Filter",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/v1/products/1/prices?date=2025-10-03",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["v1","products","1","prices"],
+              "query": [{"key":"date","value":"2025-10-03"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Price - Success",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type","value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": 180.0,\n  \"initDate\": \"2025-10-01\",\n  \"endDate\": \"2025-10-12\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/v1/products/1/prices/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["v1","products","1","prices","1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Price - Success",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:8080/v1/products/1/prices/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["v1","products","1","prices","1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
