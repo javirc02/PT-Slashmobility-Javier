@@ -8,11 +8,12 @@ import mango.challenge.products.exception.ResourceNotFoundException;
 import mango.challenge.products.model.Price;
 import mango.challenge.products.model.Product;
 import mango.challenge.products.repository.PriceRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,20 +42,25 @@ public class PriceService {
         return new PriceResponse(priceRepository.save(new Price(priceRequest, product)));
     }
 
-    public List<PriceResponse> getPrices(Long productId) {
+    public Page<PriceResponse> getPrices(
+            Long productId,
+            LocalDate date,
+            LocalDate fromDate,
+            LocalDate toDate,
+            BigDecimal minValue,
+            BigDecimal maxValue,
+            Pageable pageable) {
+
         productService.getProductByIdOrThrow(productId);
 
-        return priceRepository.findByProductId(productId).stream()
-                .map(PriceResponse::new)
-                .collect(Collectors.toList());
-    }
+        Page<PriceResponse> result = priceRepository.findByProductWithFilters(
+                productId, date, fromDate, toDate, minValue, maxValue, pageable
+        ).map(PriceResponse::new);
 
-    public PriceResponse getPriceAtDate(Long productId, LocalDate date) {
-        productService.getProductByIdOrThrow(productId);
-
-        return priceRepository.findActivePriceAtDate(productId, date)
-                .map(PriceResponse::new)
-                .orElseThrow(() -> new IllegalArgumentException("No hay precio vigente para esta fecha"));
+        if (date != null && result.isEmpty()) {
+            throw new IllegalArgumentException("No hay precio vigente para esta fecha");
+        }
+        return result;
     }
 
     public PriceResponse updatePrice(Long productId, Long priceId, PriceRequest priceRequest) {

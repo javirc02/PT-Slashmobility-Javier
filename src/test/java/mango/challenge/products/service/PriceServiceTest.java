@@ -9,6 +9,7 @@ import mango.challenge.products.repository.PriceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -168,99 +169,180 @@ public class PriceServiceTest {
     }
 
     @Test
-    void getPriceAtDate_shouldReturnPrice_whenWithinRange() {
-        Product product = Product.builder()
+    void shouldReturnPrice_whenWithinRange() {
+        Product product = Product.builder().id(1L).build();
+        Price p = Price.builder()
                 .id(1L)
-                .name("Test Product")
-                .description("Test Desc")
-                .build();
-
-        Price p1 = Price.builder()
-                .id(1L)
-                .value(BigDecimal.valueOf(15.0))
+                .value(BigDecimal.valueOf(50))
                 .initDate(LocalDate.of(2025, 9, 1))
                 .endDate(LocalDate.of(2025, 9, 10))
                 .product(product)
                 .build();
 
         when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
-        when(priceRepository.findActivePriceAtDate(1L, LocalDate.of(2025, 9, 5)))
-                .thenReturn(Optional.of(p1));
+        when(priceRepository.findByProductWithFilters(eq(1L), eq(LocalDate.of(2025, 9, 5)),
+                isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p)));
 
+        Page<PriceResponse> result = priceService.getPrices(1L, LocalDate.of(2025, 9, 5),
+                null, null, null, null, PageRequest.of(0, 10));
 
-        PriceResponse response = priceService.getPriceAtDate(1L, LocalDate.of(2025, 9, 5));
-
-        assertThat(response.getValue()).isEqualTo(BigDecimal.valueOf(15.0));
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getValue()).isEqualByComparingTo(BigDecimal.valueOf(50));
     }
 
     @Test
-    void getPriceAtDate_shouldReturnPriceWhenEndDateNull() {
-        Product product = Product.builder()
-                .id(1L)
-                .name("Test Product")
-                .description("Test Desc")
-                .build();
-
+    void shouldReturnPrice_whenEndDateNull() {
+        Product product = Product.builder().id(1L).build();
         Price p = Price.builder()
-                .id(4L)
-                .value(BigDecimal.valueOf(200.0))
+                .id(2L)
+                .value(BigDecimal.valueOf(200))
                 .initDate(LocalDate.of(2025, 10, 1))
                 .endDate(null)
                 .product(product)
                 .build();
 
         when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
-        when(priceRepository.findActivePriceAtDate(1L, LocalDate.of(2025, 12, 1)))
-                .thenReturn(Optional.of(p));
+        when(priceRepository.findByProductWithFilters(eq(1L), eq(LocalDate.of(2025, 12, 1)),
+                isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p)));
 
-        PriceResponse response = priceService.getPriceAtDate(1L, LocalDate.of(2025, 12, 1));
-        assertThat(response.getValue()).isEqualTo(BigDecimal.valueOf(200.0));
+        Page<PriceResponse> result = priceService.getPrices(1L, LocalDate.of(2025, 12, 1),
+                null, null, null, null, PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getValue()).isEqualByComparingTo(BigDecimal.valueOf(200));
     }
 
     @Test
-    void getPriceAtDate_shouldThrowException_whenNoPriceFound() {
-        when(priceRepository.findByProductId(1L)).thenReturn(List.of());
+    void shouldThrowException_whenNoPriceFoundForDate() {
+        Product product = Product.builder().id(1L).build();
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
+        when(priceRepository.findByProductWithFilters(eq(1L), eq(LocalDate.of(2025, 9, 5)),
+                isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+                .thenReturn(Page.empty());
 
-        assertThatThrownBy(() -> priceService.getPriceAtDate(1L, LocalDate.of(2025, 9, 5)))
+        assertThatThrownBy(() -> priceService.getPrices(1L, LocalDate.of(2025, 9, 5),
+                null, null, null, null, PageRequest.of(0, 10)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("No hay precio vigente para esta fecha");
     }
 
     @Test
-    void getPricesAtDate_shouldThrowException_whenProductNotExists() {
+    void shouldThrowException_whenProductNotExists_date() {
         when(productService.getProductByIdOrThrow(99L))
-                .thenThrow(new ResourceNotFoundException("Producto no encontrado"));
+                .thenThrow(new RuntimeException("Producto no encontrado"));
 
-        assertThatThrownBy(() -> priceService.getPriceAtDate(99L, LocalDate.of(2025, 9, 5)))
-                .isInstanceOf(ResourceNotFoundException.class)
+        assertThatThrownBy(() -> priceService.getPrices(99L, LocalDate.of(2025, 9, 5),
+                null, null, null, null, PageRequest.of(0, 10)))
+                .isInstanceOf(RuntimeException.class)
                 .hasMessage("Producto no encontrado");
     }
 
     @Test
-    void getPrices_shouldThrowException_whenProductNotExists() {
-        when(productService.getProductByIdOrThrow(99L))
-                .thenThrow(new ResourceNotFoundException("Producto no encontrado"));
+    void shouldReturnPagedPrices_whenNoFilters() {
+        Product product = Product.builder().id(1L).build();
+        Price p1 = Price.builder().id(1L).value(BigDecimal.valueOf(10)).initDate(LocalDate.of(2025, 9, 1)).product(product).build();
+        Price p2 = Price.builder().id(2L).value(BigDecimal.valueOf(20)).initDate(LocalDate.of(2025, 9, 2)).product(product).build();
 
-        assertThatThrownBy(() -> priceService.getPrices(99L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Producto no encontrado");
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
+        when(priceRepository.findByProductWithFilters(eq(1L), isNull(), isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p1, p2)));
+
+        Page<PriceResponse> result = priceService.getPrices(1L, null, null, null, null, null, PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(2);
     }
 
     @Test
-    void getPrices_shouldReturnListOfPriceDTOs() {
-        Product product1 = Product.builder().id(1L).build();
-        Product product2 = Product.builder().id(2L).build();
-        Price price1 = Price.builder().id(1L).value(BigDecimal.valueOf(10.0)).initDate(LocalDate.of(2025, 9, 1)).product(product1).build();
-        Price price2 = Price.builder().id(2L).value(BigDecimal.valueOf(20.0)).initDate(LocalDate.of(2025, 9, 15)).product(product2).build();
+    void shouldReturnPagedPrices_withSorting() {
+        Product product = Product.builder().id(1L).build();
+        Price p1 = Price.builder().id(1L).value(BigDecimal.valueOf(10)).initDate(LocalDate.of(2025, 9, 2)).product(product).build();
+        Price p2 = Price.builder().id(2L).value(BigDecimal.valueOf(20)).initDate(LocalDate.of(2025, 9, 1)).product(product).build();
 
-        when(priceRepository.findByProductId(1L)).thenReturn(List.of(price1, price2));
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
+        when(priceRepository.findByProductWithFilters(eq(1L), isNull(), isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p2, p1))); // simula ordenado
 
-        List<PriceResponse> response = priceService.getPrices(1L);
+        Page<PriceResponse> result = priceService.getPrices(1L, null, null, null, null, null,
+                PageRequest.of(0, 10, Sort.by("initDate")));
 
-        assertThat(response).hasSize(2);
-        assertThat(response.get(0).getValue()).isEqualTo(BigDecimal.valueOf(10.0));
-        assertThat(response.get(1).getValue()).isEqualTo(BigDecimal.valueOf(20.0));
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent().get(0).getInitDate()).isBefore(result.getContent().get(1).getInitDate());
     }
+
+    @Test
+    void shouldReturnPagedPrices_withDateFilter() {
+        Product product = Product.builder().id(1L).build();
+        Price p1 = Price.builder().id(1L).value(BigDecimal.valueOf(10)).initDate(LocalDate.of(2025, 9, 1)).product(product).build();
+
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
+        when(priceRepository.findByProductWithFilters(eq(1L), isNull(), eq(LocalDate.of(2025, 9, 1)),
+                eq(LocalDate.of(2025, 9, 30)), isNull(), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p1)));
+
+        Page<PriceResponse> result = priceService.getPrices(1L, null, LocalDate.of(2025, 9, 1),
+                LocalDate.of(2025, 9, 30), null, null, PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getValue()).isEqualByComparingTo(BigDecimal.valueOf(10));
+    }
+
+    @Test
+    void shouldReturnPagedPrices_withValueFilter() {
+        Product product = Product.builder().id(1L).build();
+        Price p1 = Price.builder().id(1L).value(BigDecimal.valueOf(15)).initDate(LocalDate.of(2025, 9, 1)).product(product).build();
+
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
+        when(priceRepository.findByProductWithFilters(eq(1L), isNull(), isNull(), isNull(),
+                eq(BigDecimal.valueOf(10)), eq(BigDecimal.valueOf(20)), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p1)));
+
+        Page<PriceResponse> result = priceService.getPrices(1L, null, null, null,
+                BigDecimal.valueOf(10), BigDecimal.valueOf(20), PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getValue()).isEqualByComparingTo(BigDecimal.valueOf(15));
+    }
+
+    @Test
+    void shouldReturnPagedPrices_combinedFilters() {
+        Product product = Product.builder().id(1L).build();
+        Price p1 = Price.builder().id(1L).value(BigDecimal.valueOf(15))
+                .initDate(LocalDate.of(2025, 9, 5))
+                .endDate(LocalDate.of(2025, 9, 15))
+                .product(product)
+                .build();
+
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
+        when(priceRepository.findByProductWithFilters(eq(1L),
+                eq(LocalDate.of(2025, 9, 10)),
+                eq(LocalDate.of(2025, 9, 1)),
+                eq(LocalDate.of(2025, 9, 30)),
+                eq(BigDecimal.valueOf(10)),
+                eq(BigDecimal.valueOf(20)),
+                any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(p1)));
+
+        Page<PriceResponse> result = priceService.getPrices(1L, LocalDate.of(2025, 9, 10),
+                LocalDate.of(2025, 9, 1), LocalDate.of(2025, 9, 30),
+                BigDecimal.valueOf(10), BigDecimal.valueOf(20),
+                PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getValue()).isEqualByComparingTo(BigDecimal.valueOf(15));
+    }
+
+    @Test
+    void shouldThrowException_whenProductNotExists_filters() {
+        when(productService.getProductByIdOrThrow(99L))
+                .thenThrow(new RuntimeException("Producto no encontrado"));
+
+        assertThatThrownBy(() -> priceService.getPrices(99L, null, null, null, null, null, PageRequest.of(0, 10)))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Producto no encontrado");
+    }
+
 
     @Test
     void updatePrice_shouldUpdateValueOnly() {

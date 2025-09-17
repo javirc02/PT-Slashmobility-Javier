@@ -5,13 +5,17 @@ import lombok.RequiredArgsConstructor;
 import mango.challenge.products.dto.PriceRequest;
 import mango.challenge.products.dto.PriceResponse;
 import mango.challenge.products.service.PriceService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/v1/products/{productId}/prices")
@@ -30,18 +34,18 @@ public class PriceController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PriceResponse>> getPrices(
+    public Page<PriceResponse> getPrices(
             @PathVariable Long productId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
-    ) {
-        if (date != null) {
-            PriceResponse priceAtDate = priceService.getPriceAtDate(productId, date);
-            return ResponseEntity.ok(List.of(priceAtDate));
-        } else {
-            List<PriceResponse> prices = priceService.getPrices(productId);
-            return ResponseEntity.ok(prices);
-        }
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @RequestParam(required = false) BigDecimal minValue,
+            @RequestParam(required = false) BigDecimal maxValue,
+            @PageableDefault(sort = "init_date", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        return priceService.getPrices(productId, date, fromDate, toDate, minValue, maxValue, pageable);
     }
+
 
     @PatchMapping("/{priceId}")
     public ResponseEntity<PriceResponse> updatePrice(
