@@ -54,8 +54,8 @@ products/build/reports/tests/test/packages/mango.challenge.products.service.html
   - **Spring Data JPA / Hibernate:** Facilitan la persistencia de datos, manejo de transacciones y consultas complejas de manera declarativa, reduciendo boilerplate y aumentando la mantenibilidad del código.
 
 ### PostgreSQL
-- Base de datos relacional confiable, con soporte a transacciones, índices avanzados y escalabilidad.  
-- Ideal para este proyecto para mantener la integridad de los datos y contar con un buen rendimiento rendimiento.
+- Base de datos relacional confiable, con soporte a transacciones, índices avanzados y escalabilidad.
+- Una base de datos relacional es ideal para este proyecto ya que los modelos están muy acotados y nos permite mantener la integridad de los datos como por ejemplo evitar duplicidades de precios en fechas concretas con retricciones de tabla y contar con un buen rendimiento en las consultas gracias a la posibilidad de la creación de índices.
 
 ### Gradle
 - Sistema de construcción flexible y rápido, que facilita la gestión de dependencias y tareas de construcción.  
@@ -74,6 +74,9 @@ products/build/reports/tests/test/packages/mango.challenge.products.service.html
 
 ### Flyway
 - Muy útil para gestionar la evolución de la base de datos de forma automática y controlada. Permite versionar la estructura y los datos iniciales mediante scripts numerados, garantizando que todos los entornos (desarrollo, pruebas y producción) tengan la misma configuración.
+- 
+### Lombok
+- Utilizado para facilitar y agilizar el desarrollo con java, además de mantener el código mas limpio. Evita tener que definir manualmente tanto getters, setters, contructores o builders ya que al añadir las anotaciones pertinentes ya nos genera estos métodos.
 
 ### Decisiones de diseño de la API
 - Validaciones de negocio robustas (fechas, solapamientos, existencia de entidad).  
