@@ -1,8 +1,7 @@
 package mango.challenge.products.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
-
-import java.util.List;
 
 @Getter
 @Setter
@@ -10,6 +9,11 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ProductRequest {
+
+    @NotNull(message = "El nombre no puede ser nulo")
     private String name;
+
+    @NotNull(message = "La descripción no puede ser nula")
     private String description;
+
 }
