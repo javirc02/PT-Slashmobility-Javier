@@ -56,18 +56,6 @@ http://localhost:8080
 Una vez ejecutado el proyecto, accede a:
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
 - **OpenAPI JSON**: http://localhost:8080/v3/api-docs
-### Endpoints Principales
-| Método   | Endpoint                  | Descripción |
-|----------|---------------------------|-------------|
-| `GET`    | `/api/v1/products`        | Listar productos paginados |
-| `POST`   | `/api/v1/products`        | Crear nuevo producto |
-| `GET`    | `/api/v1/products/{id}`   | Obtener producto por ID |
-| `PATCH`  | `/api/v1/products/{id}`   | Actualizar producto parcialmente |
-| `DELETE` | `/api/v1/products/{id}`   | Eliminar producto |
-| `GET`    | `/api/v1/prices`          | Listar precios con filtros avanzados |
-| `POST`   | `/api/v1/prices`          | Crear nuevo precio |
-| `GET`    | `/api/v1/prices/{id}`     | Obtener precio por ID |
-
 ---
 ## Testing
 ### Ejecutar tests
