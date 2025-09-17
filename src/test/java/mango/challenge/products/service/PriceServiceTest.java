@@ -36,7 +36,7 @@ public class PriceServiceTest {
     @Test
     void addPrice_shouldSaveAndReturnPriceDTO() {
         Product product = Product.builder().id(1L).prices(List.of()).build();
-        when(productService.getProductById(1L)).thenReturn(product);
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
 
         PriceRequest request = PriceRequest.builder()
                 .value(BigDecimal.valueOf(99.99))
@@ -67,7 +67,7 @@ public class PriceServiceTest {
     @Test
     void addPrice_shouldAllowEndDateNull() {
         Product product = Product.builder().id(1L).prices(List.of()).build();
-        when(productService.getProductById(1L)).thenReturn(product);
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
 
         PriceRequest dto = PriceRequest.builder()
                 .value(BigDecimal.valueOf(120.0))
@@ -99,7 +99,7 @@ public class PriceServiceTest {
                 .build();
 
         Product product = Product.builder().id(1L).prices(List.of(existing)).build();
-        when(productService.getProductById(1L)).thenReturn(product);
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
 
         PriceRequest dto = PriceRequest.builder()
                 .value(BigDecimal.valueOf(75.0))
@@ -117,7 +117,7 @@ public class PriceServiceTest {
     @Test
     void addPrice_shouldThrowException_whenInitDateAfterEndDate() {
         Product product = Product.builder().id(1L).prices(List.of()).build();
-        when(productService.getProductById(1L)).thenReturn(product);
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
 
         PriceRequest dto = PriceRequest.builder()
                 .value(BigDecimal.valueOf(50.0))
@@ -132,13 +132,8 @@ public class PriceServiceTest {
 
     @Test
     void addPrice_shouldThrowException_whenDateOverlap() {
-        Price existing = Price.builder()
-                .initDate(LocalDate.of(2025, 9, 1))
-                .endDate(LocalDate.of(2025, 9, 10))
-                .build();
-
-        Product product = Product.builder().id(1L).prices(List.of(existing)).build();
-        when(productService.getProductById(1L)).thenReturn(product);
+        Product product = Product.builder().id(1L).build();
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
 
         PriceRequest dto = PriceRequest.builder()
                 .value(BigDecimal.valueOf(60.0))
@@ -146,15 +141,20 @@ public class PriceServiceTest {
                 .endDate(LocalDate.of(2025, 9, 15))
                 .build();
 
+        when(priceRepository.existsOverlappingPrice(1L, dto.getInitDate(), dto.getEndDate()))
+                .thenReturn(true);
+
         assertThatThrownBy(() -> priceService.addPrice(1L, dto))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("El rango de fechas se solapa con otro precio existente");
+
+        verify(priceRepository, never()).save(any());
     }
 
     @Test
     void addPrice_shouldThrowException_whenProductNotExists() {
-        when(productService.getProductById(99L))
-                .thenThrow(new IllegalArgumentException("Producto no encontrado"));
+        when(productService.getProductByIdOrThrow(99L))
+                .thenThrow(new ResourceNotFoundException("Producto no encontrado"));
 
         PriceRequest dto = PriceRequest.builder()
                 .value(BigDecimal.valueOf(50.0))
@@ -183,7 +183,10 @@ public class PriceServiceTest {
                 .product(product)
                 .build();
 
-        when(priceRepository.findByProductId(1L)).thenReturn(List.of(p1));
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
+        when(priceRepository.findActivePriceAtDate(1L, LocalDate.of(2025, 9, 5)))
+                .thenReturn(Optional.of(p1));
+
 
         PriceResponse response = priceService.getPriceAtDate(1L, LocalDate.of(2025, 9, 5));
 
@@ -206,7 +209,9 @@ public class PriceServiceTest {
                 .product(product)
                 .build();
 
-        when(priceRepository.findByProductId(1L)).thenReturn(List.of(p));
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
+        when(priceRepository.findActivePriceAtDate(1L, LocalDate.of(2025, 12, 1)))
+                .thenReturn(Optional.of(p));
 
         PriceResponse response = priceService.getPriceAtDate(1L, LocalDate.of(2025, 12, 1));
         assertThat(response.getValue()).isEqualTo(BigDecimal.valueOf(200.0));
@@ -223,8 +228,8 @@ public class PriceServiceTest {
 
     @Test
     void getPricesAtDate_shouldThrowException_whenProductNotExists() {
-        when(productService.getProductById(99L))
-                .thenThrow(new IllegalArgumentException("Producto no encontrado"));
+        when(productService.getProductByIdOrThrow(99L))
+                .thenThrow(new ResourceNotFoundException("Producto no encontrado"));
 
         assertThatThrownBy(() -> priceService.getPriceAtDate(99L, LocalDate.of(2025, 9, 5)))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -233,8 +238,8 @@ public class PriceServiceTest {
 
     @Test
     void getPrices_shouldThrowException_whenProductNotExists() {
-        when(productService.getProductById(99L))
-                .thenThrow(new IllegalArgumentException("Producto no encontrado"));
+        when(productService.getProductByIdOrThrow(99L))
+                .thenThrow(new ResourceNotFoundException("Producto no encontrado"));
 
         assertThatThrownBy(() -> priceService.getPrices(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -264,7 +269,7 @@ public class PriceServiceTest {
                 .initDate(LocalDate.of(2025, 9, 1)).endDate(LocalDate.of(2025, 9, 30)).build();
         product.setPrices(List.of(existing));
 
-        when(productService.getProductById(1L)).thenReturn(product);
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
         when(priceRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(priceRepository.save(any(Price.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -284,7 +289,7 @@ public class PriceServiceTest {
                 .initDate(LocalDate.of(2025, 9, 1)).endDate(LocalDate.of(2025, 9, 30)).build();
         product.setPrices(List.of(existing));
 
-        when(productService.getProductById(1L)).thenReturn(product);
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
         when(priceRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(priceRepository.save(any(Price.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -307,7 +312,7 @@ public class PriceServiceTest {
                 .initDate(LocalDate.of(2025, 9, 1)).endDate(LocalDate.of(2025, 9, 30)).build();
         product.setPrices(List.of(existing));
 
-        when(productService.getProductById(1L)).thenReturn(product);
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
         when(priceRepository.findById(1L)).thenReturn(Optional.of(existing));
 
         PriceRequest dto = PriceRequest.builder()
@@ -328,7 +333,7 @@ public class PriceServiceTest {
                 .endDate(LocalDate.of(2025, 9, 20)).build();
         Product product = Product.builder().id(1L).prices(List.of(p1, p2)).build();
 
-        when(productService.getProductById(1L)).thenReturn(product);
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
         when(priceRepository.findById(1L)).thenReturn(Optional.of(p1));
 
         PriceRequest dto = PriceRequest.builder()
@@ -343,7 +348,7 @@ public class PriceServiceTest {
 
     @Test
     void updatePrice_shouldThrowException_whenProductNotFound() {
-        when(productService.getProductById(1L)).thenThrow(new IllegalArgumentException("Producto no encontrado"));
+        when(productService.getProductByIdOrThrow(1L)).thenThrow(new ResourceNotFoundException("Producto no encontrado"));
 
         PriceRequest dto = PriceRequest.builder().value(BigDecimal.valueOf(50)).build();
 
@@ -355,7 +360,7 @@ public class PriceServiceTest {
     @Test
     void updatePrice_shouldThrowException_whenPriceNotFound() {
         Product product = Product.builder().id(1L).prices(List.of()).build();
-        when(productService.getProductById(1L)).thenReturn(product);
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
         when(priceRepository.findById(1L)).thenReturn(Optional.empty());
 
         PriceRequest dto = PriceRequest.builder().value(BigDecimal.valueOf(50)).build();
@@ -369,7 +374,7 @@ public class PriceServiceTest {
     void updatePrice_shouldThrowException_whenPriceDoesNotBelongToProduct() {
         Product product = Product.builder().id(1L).prices(List.of()).build();
         Price otherPrice = Price.builder().id(2L).build();
-        when(productService.getProductById(1L)).thenReturn(product);
+        when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
         when(priceRepository.findById(2L)).thenReturn(Optional.of(otherPrice));
 
         PriceRequest dto = PriceRequest.builder().value(BigDecimal.valueOf(50)).build();

@@ -64,7 +64,7 @@ public class ProductServiceTest {
 
         when(productRepository.findById(10L)).thenReturn(Optional.of(product));
 
-        Product result = productService.getProductById(10L);
+        Product result = productService.getProductByIdOrThrow(10L);
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(10L);
@@ -75,7 +75,7 @@ public class ProductServiceTest {
     void getProductById_shouldThrowException_whenNotExists() {
         when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> productService.getProductById(99L))
+        assertThatThrownBy(() -> productService.getProductByIdOrThrow(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Producto no encontrado");
     }
@@ -90,7 +90,7 @@ public class ProductServiceTest {
 
         when(productRepository.findById(5L)).thenReturn(Optional.of(product));
 
-        ProductResponse response = productService.getProductResponseById(5L);
+        ProductResponse response = productService.getProductById(5L);
 
         assertThat(response).isNotNull();
         assertThat(response.getId()).isEqualTo(5L);

@@ -19,17 +19,16 @@ public class ProductService {
     private final ProductRepository productRepository;
 
     public ProductResponse createProduct(ProductRequest productRequest) {
-        Product savedProduct = productRepository.save(new Product(productRequest));
-        return new ProductResponse(savedProduct);
+        return new ProductResponse(productRepository.save(new Product(productRequest)));
     }
 
-    public Product getProductById(Long id) {
+    public ProductResponse getProductById(Long id) {
+        return new ProductResponse(getProductByIdOrThrow(id));
+    }
+
+    public Product getProductByIdOrThrow(Long id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
-    }
-
-    public ProductResponse getProductResponseById(Long id) {
-        return new ProductResponse(getProductById(id));
     }
 
     public List<ProductResponse> getAllProducts() {
