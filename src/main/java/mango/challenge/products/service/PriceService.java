@@ -2,7 +2,8 @@ package mango.challenge.products.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import mango.challenge.products.dto.PriceDTO;
+import mango.challenge.products.dto.PriceRequest;
+import mango.challenge.products.dto.PriceResponse;
 import mango.challenge.products.model.Price;
 import mango.challenge.products.model.Product;
 import mango.challenge.products.repository.PriceRepository;
@@ -20,43 +21,31 @@ public class PriceService {
     private final PriceRepository priceRepository;
     private final ProductService productService;
 
-    public PriceDTO addPrice(Long productId, PriceDTO priceDTO) {
+    public PriceResponse addPrice(Long productId, PriceRequest priceRequest) {
         Product product = productService.getProductById(productId);
 
         // Validación de fechas
-        if (priceDTO.getEndDate() != null && priceDTO.getInitDate().isAfter(priceDTO.getEndDate())) {
+        if (priceRequest.getEndDate() != null && priceRequest.getInitDate().isAfter(priceRequest.getEndDate())) {
             throw new IllegalArgumentException("initDate debe ser menor que endDate");
         }
 
         // Validación de solapamiento de fechas
         boolean overlap = product.getPrices().stream().anyMatch(p ->
-                (priceDTO.getEndDate() == null || p.getEndDate() == null
-                        ? priceDTO.getInitDate().isBefore(p.getEndDate() != null ? p.getEndDate().plusDays(1) : LocalDate.MAX)
-                        : !(priceDTO.getEndDate().isBefore(p.getInitDate()) || priceDTO.getInitDate().isAfter(p.getEndDate())))
+                (priceRequest.getEndDate() == null || p.getEndDate() == null
+                        ? priceRequest.getInitDate().isBefore(p.getEndDate() != null ? p.getEndDate().plusDays(1) : LocalDate.MAX)
+                        : !(priceRequest.getEndDate().isBefore(p.getInitDate()) || priceRequest.getInitDate().isAfter(p.getEndDate())))
         );
 
         if (overlap) {
             throw new IllegalArgumentException("El rango de fechas se solapa con otro precio existente");
         }
 
-        Price price = Price.builder()
-                .product(product)
-                .value(priceDTO.getValue())
-                .initDate(priceDTO.getInitDate())
-                .endDate(priceDTO.getEndDate())
-                .build();
+        Price savedPrice = priceRepository.save(new Price(priceRequest, product));
 
-        Price savedPrice = priceRepository.save(price);
-
-        return PriceDTO.builder()
-                .id(savedPrice.getId())
-                .value(savedPrice.getValue())
-                .initDate(savedPrice.getInitDate())
-                .endDate(savedPrice.getEndDate())
-                .build();
+        return new PriceResponse(savedPrice);
     }
 
-    public List<PriceDTO> getPrices(Long productId) {
+    public List<PriceResponse> getPrices(Long productId) {
         try {
             Product product = productService.getProductById(productId);
         }catch (Exception e){
@@ -65,16 +54,11 @@ public class PriceService {
 
         List<Price> prices = priceRepository.findByProductId(productId);
         return prices.stream()
-                .map(p -> PriceDTO.builder()
-                        .id(p.getId())
-                        .value(p.getValue())
-                        .initDate(p.getInitDate())
-                        .endDate(p.getEndDate())
-                        .build())
+                .map(PriceResponse::new)
                 .collect(Collectors.toList());
     }
 
-    public PriceDTO getPriceAtDate(Long productId, LocalDate date) {
+    public PriceResponse getPriceAtDate(Long productId, LocalDate date) {
         try {
             Product product = productService.getProductById(productId);
         }catch (Exception e){
@@ -87,16 +71,11 @@ public class PriceService {
                 .filter(p -> (p.getInitDate().isEqual(date) || p.getInitDate().isBefore(date)) &&
                         (p.getEndDate() == null || p.getEndDate().isAfter(date) || p.getEndDate().isEqual(date)))
                 .findFirst()
-                .map(p -> PriceDTO.builder()
-                        .id(p.getId())
-                        .value(p.getValue())
-                        .initDate(p.getInitDate())
-                        .endDate(p.getEndDate())
-                        .build())
+                .map(PriceResponse::new)
                 .orElseThrow(() -> new IllegalArgumentException("No hay precio vigente para esta fecha"));
     }
 
-    public PriceDTO updatePrice(Long productId, Long priceId, PriceDTO priceDTO) {
+    public PriceResponse updatePrice(Long productId, Long priceId, PriceRequest priceRequest) {
         Product product;
         try {
             product = productService.getProductById(productId);
@@ -111,14 +90,14 @@ public class PriceService {
             throw new IllegalArgumentException("El precio no pertenece al producto");
         }
 
-        if (priceDTO.getValue() != null) {
-            existingPrice.setValue(priceDTO.getValue());
+        if (priceRequest.getValue() != null) {
+            existingPrice.setValue(priceRequest.getValue());
         }
-        if (priceDTO.getInitDate() != null) {
-            existingPrice.setInitDate(priceDTO.getInitDate());
+        if (priceRequest.getInitDate() != null) {
+            existingPrice.setInitDate(priceRequest.getInitDate());
         }
-        if (priceDTO.getEndDate() != null) {
-            existingPrice.setEndDate(priceDTO.getEndDate());
+        if (priceRequest.getEndDate() != null) {
+            existingPrice.setEndDate(priceRequest.getEndDate());
         }
 
         if (existingPrice.getEndDate() != null && existingPrice.getInitDate().isAfter(existingPrice.getEndDate())) {
@@ -138,31 +117,14 @@ public class PriceService {
 
         Price updatedPrice = priceRepository.save(existingPrice);
 
-        return PriceDTO.builder()
-                .id(updatedPrice.getId())
-                .value(updatedPrice.getValue())
-                .initDate(updatedPrice.getInitDate())
-                .endDate(updatedPrice.getEndDate())
-                .build();
+        return new PriceResponse(updatedPrice);
     }
 
     public void deletePrice(Long productId, Long priceId) {
-        Product product;
-        try {
-            product = productService.getProductById(productId);
-        }catch (Exception e){
-            throw new IllegalArgumentException("Producto no encontrado");
+        int deletedCount = priceRepository.deleteByIdAndProductId(priceId, productId);
+        if (deletedCount == 0) {
+            throw new IllegalArgumentException("Precio no encontrado para el producto especificado");
         }
-
-        Price existingPrice = priceRepository.findById(priceId)
-                .orElseThrow(() -> new IllegalArgumentException("Precio no encontrado"));
-
-        if (!product.getPrices().contains(existingPrice)) {
-            throw new IllegalArgumentException("El precio no pertenece al producto");
-        }
-
-        product.getPrices().remove(existingPrice);
-        priceRepository.delete(existingPrice);
     }
 
 }

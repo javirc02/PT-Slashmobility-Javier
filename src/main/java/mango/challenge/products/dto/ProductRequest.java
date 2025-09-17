@@ -9,9 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductDTO {
-    private Long id;
+public class ProductRequest {
     private String name;
     private String description;
-    private List<PriceDTO> prices;
 }

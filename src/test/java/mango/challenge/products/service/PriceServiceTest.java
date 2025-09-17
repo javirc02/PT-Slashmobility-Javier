@@ -1,6 +1,7 @@
 package mango.challenge.products.service;
 
-import mango.challenge.products.dto.PriceDTO;
+import mango.challenge.products.dto.PriceRequest;
+import mango.challenge.products.dto.PriceResponse;
 import mango.challenge.products.model.Price;
 import mango.challenge.products.model.Product;
 import mango.challenge.products.repository.PriceRepository;
@@ -37,7 +38,7 @@ public class PriceServiceTest {
         Product product = Product.builder().id(1L).prices(List.of()).build();
         when(productService.getProductById(1L)).thenReturn(product);
 
-        PriceDTO dto = PriceDTO.builder()
+        PriceRequest request = PriceRequest.builder()
                 .value(BigDecimal.valueOf(99.99))
                 .initDate(LocalDate.of(2025, 9, 1))
                 .endDate(LocalDate.of(2025, 9, 30))
@@ -46,14 +47,14 @@ public class PriceServiceTest {
         Price savedPrice = Price.builder()
                 .id(1L)
                 .product(product)
-                .value(dto.getValue())
-                .initDate(dto.getInitDate())
-                .endDate(dto.getEndDate())
+                .value(request.getValue())
+                .initDate(request.getInitDate())
+                .endDate(request.getEndDate())
                 .build();
 
         when(priceRepository.save(any(Price.class))).thenReturn(savedPrice);
 
-        PriceDTO result = priceService.addPrice(1L, dto);
+        PriceResponse result = priceService.addPrice(1L, request);
 
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getValue()).isEqualTo(BigDecimal.valueOf(99.99));
@@ -68,7 +69,7 @@ public class PriceServiceTest {
         Product product = Product.builder().id(1L).prices(List.of()).build();
         when(productService.getProductById(1L)).thenReturn(product);
 
-        PriceDTO dto = PriceDTO.builder()
+        PriceRequest dto = PriceRequest.builder()
                 .value(BigDecimal.valueOf(120.0))
                 .initDate(LocalDate.of(2025, 10, 1))
                 .endDate(null)
@@ -84,10 +85,10 @@ public class PriceServiceTest {
 
         when(priceRepository.save(any(Price.class))).thenReturn(saved);
 
-        PriceDTO result = priceService.addPrice(1L, dto);
+        PriceResponse response = priceService.addPrice(1L, dto);
 
-        assertThat(result.getId()).isEqualTo(3L);
-        assertThat(result.getEndDate()).isNull();
+        assertThat(response.getId()).isEqualTo(3L);
+        assertThat(response.getEndDate()).isNull();
     }
 
     @Test
@@ -100,7 +101,7 @@ public class PriceServiceTest {
         Product product = Product.builder().id(1L).prices(List.of(existing)).build();
         when(productService.getProductById(1L)).thenReturn(product);
 
-        PriceDTO dto = PriceDTO.builder()
+        PriceRequest dto = PriceRequest.builder()
                 .value(BigDecimal.valueOf(75.0))
                 .initDate(LocalDate.of(2025, 9, 11)) // empieza justo después del anterior
                 .endDate(LocalDate.of(2025, 9, 20))
@@ -109,8 +110,8 @@ public class PriceServiceTest {
         Price saved = Price.builder().id(5L).value(dto.getValue()).initDate(dto.getInitDate()).endDate(dto.getEndDate()).product(product).build();
         when(priceRepository.save(any(Price.class))).thenReturn(saved);
 
-        PriceDTO result = priceService.addPrice(1L, dto);
-        assertThat(result.getId()).isEqualTo(5L);
+        PriceResponse response = priceService.addPrice(1L, dto);
+        assertThat(response.getId()).isEqualTo(5L);
     }
 
     @Test
@@ -118,7 +119,7 @@ public class PriceServiceTest {
         Product product = Product.builder().id(1L).prices(List.of()).build();
         when(productService.getProductById(1L)).thenReturn(product);
 
-        PriceDTO dto = PriceDTO.builder()
+        PriceRequest dto = PriceRequest.builder()
                 .value(BigDecimal.valueOf(50.0))
                 .initDate(LocalDate.of(2025, 10, 1))
                 .endDate(LocalDate.of(2025, 9, 30))
@@ -139,7 +140,7 @@ public class PriceServiceTest {
         Product product = Product.builder().id(1L).prices(List.of(existing)).build();
         when(productService.getProductById(1L)).thenReturn(product);
 
-        PriceDTO dto = PriceDTO.builder()
+        PriceRequest dto = PriceRequest.builder()
                 .value(BigDecimal.valueOf(60.0))
                 .initDate(LocalDate.of(2025, 9, 5))
                 .endDate(LocalDate.of(2025, 9, 15))
@@ -155,7 +156,7 @@ public class PriceServiceTest {
         when(productService.getProductById(99L))
                 .thenThrow(new IllegalArgumentException("Producto no encontrado"));
 
-        PriceDTO dto = PriceDTO.builder()
+        PriceRequest dto = PriceRequest.builder()
                 .value(BigDecimal.valueOf(50.0))
                 .initDate(LocalDate.of(2025, 10, 1))
                 .endDate(LocalDate.of(2025, 10, 5))
@@ -168,33 +169,47 @@ public class PriceServiceTest {
 
     @Test
     void getPriceAtDate_shouldReturnPrice_whenWithinRange() {
+        Product product = Product.builder()
+                .id(1L)
+                .name("Test Product")
+                .description("Test Desc")
+                .build();
+
         Price p1 = Price.builder()
                 .id(1L)
                 .value(BigDecimal.valueOf(15.0))
                 .initDate(LocalDate.of(2025, 9, 1))
                 .endDate(LocalDate.of(2025, 9, 10))
+                .product(product)
                 .build();
 
         when(priceRepository.findByProductId(1L)).thenReturn(List.of(p1));
 
-        PriceDTO result = priceService.getPriceAtDate(1L, LocalDate.of(2025, 9, 5));
+        PriceResponse response = priceService.getPriceAtDate(1L, LocalDate.of(2025, 9, 5));
 
-        assertThat(result.getValue()).isEqualTo(BigDecimal.valueOf(15.0));
+        assertThat(response.getValue()).isEqualTo(BigDecimal.valueOf(15.0));
     }
 
     @Test
     void getPriceAtDate_shouldReturnPriceWhenEndDateNull() {
+        Product product = Product.builder()
+                .id(1L)
+                .name("Test Product")
+                .description("Test Desc")
+                .build();
+
         Price p = Price.builder()
                 .id(4L)
                 .value(BigDecimal.valueOf(200.0))
                 .initDate(LocalDate.of(2025, 10, 1))
                 .endDate(null)
+                .product(product)
                 .build();
 
         when(priceRepository.findByProductId(1L)).thenReturn(List.of(p));
 
-        PriceDTO result = priceService.getPriceAtDate(1L, LocalDate.of(2025, 12, 1));
-        assertThat(result.getValue()).isEqualTo(BigDecimal.valueOf(200.0));
+        PriceResponse response = priceService.getPriceAtDate(1L, LocalDate.of(2025, 12, 1));
+        assertThat(response.getValue()).isEqualTo(BigDecimal.valueOf(200.0));
     }
 
     @Test
@@ -228,17 +243,18 @@ public class PriceServiceTest {
 
     @Test
     void getPrices_shouldReturnListOfPriceDTOs() {
-        Product product = Product.builder().id(1L).build();
-        Price price1 = Price.builder().id(1L).value(BigDecimal.valueOf(10.0)).initDate(LocalDate.of(2025, 9, 1)).build();
-        Price price2 = Price.builder().id(2L).value(BigDecimal.valueOf(20.0)).initDate(LocalDate.of(2025, 9, 15)).build();
+        Product product1 = Product.builder().id(1L).build();
+        Product product2 = Product.builder().id(2L).build();
+        Price price1 = Price.builder().id(1L).value(BigDecimal.valueOf(10.0)).initDate(LocalDate.of(2025, 9, 1)).product(product1).build();
+        Price price2 = Price.builder().id(2L).value(BigDecimal.valueOf(20.0)).initDate(LocalDate.of(2025, 9, 15)).product(product2).build();
 
         when(priceRepository.findByProductId(1L)).thenReturn(List.of(price1, price2));
 
-        List<PriceDTO> result = priceService.getPrices(1L);
+        List<PriceResponse> response = priceService.getPrices(1L);
 
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getValue()).isEqualTo(BigDecimal.valueOf(10.0));
-        assertThat(result.get(1).getValue()).isEqualTo(BigDecimal.valueOf(20.0));
+        assertThat(response).hasSize(2);
+        assertThat(response.get(0).getValue()).isEqualTo(BigDecimal.valueOf(10.0));
+        assertThat(response.get(1).getValue()).isEqualTo(BigDecimal.valueOf(20.0));
     }
 
     @Test
@@ -252,13 +268,13 @@ public class PriceServiceTest {
         when(priceRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(priceRepository.save(any(Price.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        PriceDTO dto = PriceDTO.builder().value(BigDecimal.valueOf(60.0)).build();
+        PriceRequest request = PriceRequest.builder().value(BigDecimal.valueOf(60.0)).build();
 
-        PriceDTO updated = priceService.updatePrice(1L, 1L, dto);
+        PriceResponse response = priceService.updatePrice(1L, 1L, request);
 
-        assertThat(updated.getValue()).isEqualTo(BigDecimal.valueOf(60.0));
-        assertThat(updated.getInitDate()).isEqualTo(existing.getInitDate());
-        assertThat(updated.getEndDate()).isEqualTo(existing.getEndDate());
+        assertThat(response.getValue()).isEqualTo(BigDecimal.valueOf(60.0));
+        assertThat(response.getInitDate()).isEqualTo(existing.getInitDate());
+        assertThat(response.getEndDate()).isEqualTo(existing.getEndDate());
     }
 
     @Test
@@ -272,16 +288,16 @@ public class PriceServiceTest {
         when(priceRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(priceRepository.save(any(Price.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        PriceDTO dto = PriceDTO.builder()
+        PriceRequest dto = PriceRequest.builder()
                 .initDate(LocalDate.of(2025, 9, 5))
                 .endDate(LocalDate.of(2025, 10, 5))
                 .build();
 
-        PriceDTO updated = priceService.updatePrice(1L, 1L, dto);
+        PriceResponse response = priceService.updatePrice(1L, 1L, dto);
 
-        assertThat(updated.getInitDate()).isEqualTo(LocalDate.of(2025, 9, 5));
-        assertThat(updated.getEndDate()).isEqualTo(LocalDate.of(2025, 10, 5));
-        assertThat(updated.getValue()).isEqualTo(existing.getValue());
+        assertThat(response.getInitDate()).isEqualTo(LocalDate.of(2025, 9, 5));
+        assertThat(response.getEndDate()).isEqualTo(LocalDate.of(2025, 10, 5));
+        assertThat(response.getValue()).isEqualTo(existing.getValue());
     }
 
     @Test
@@ -294,7 +310,7 @@ public class PriceServiceTest {
         when(productService.getProductById(1L)).thenReturn(product);
         when(priceRepository.findById(1L)).thenReturn(Optional.of(existing));
 
-        PriceDTO dto = PriceDTO.builder()
+        PriceRequest dto = PriceRequest.builder()
                 .initDate(LocalDate.of(2025, 10, 1))
                 .endDate(LocalDate.of(2025, 9, 30))
                 .build();
@@ -315,7 +331,7 @@ public class PriceServiceTest {
         when(productService.getProductById(1L)).thenReturn(product);
         when(priceRepository.findById(1L)).thenReturn(Optional.of(p1));
 
-        PriceDTO dto = PriceDTO.builder()
+        PriceRequest dto = PriceRequest.builder()
                 .initDate(LocalDate.of(2025, 9, 8))
                 .endDate(LocalDate.of(2025, 9, 18))
                 .build();
@@ -329,7 +345,7 @@ public class PriceServiceTest {
     void updatePrice_shouldThrowException_whenProductNotFound() {
         when(productService.getProductById(1L)).thenThrow(new IllegalArgumentException("Producto no encontrado"));
 
-        PriceDTO dto = PriceDTO.builder().value(BigDecimal.valueOf(50)).build();
+        PriceRequest dto = PriceRequest.builder().value(BigDecimal.valueOf(50)).build();
 
         assertThatThrownBy(() -> priceService.updatePrice(1L, 1L, dto))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -342,7 +358,7 @@ public class PriceServiceTest {
         when(productService.getProductById(1L)).thenReturn(product);
         when(priceRepository.findById(1L)).thenReturn(Optional.empty());
 
-        PriceDTO dto = PriceDTO.builder().value(BigDecimal.valueOf(50)).build();
+        PriceRequest dto = PriceRequest.builder().value(BigDecimal.valueOf(50)).build();
 
         assertThatThrownBy(() -> priceService.updatePrice(1L, 1L, dto))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -356,7 +372,7 @@ public class PriceServiceTest {
         when(productService.getProductById(1L)).thenReturn(product);
         when(priceRepository.findById(2L)).thenReturn(Optional.of(otherPrice));
 
-        PriceDTO dto = PriceDTO.builder().value(BigDecimal.valueOf(50)).build();
+        PriceRequest dto = PriceRequest.builder().value(BigDecimal.valueOf(50)).build();
 
         assertThatThrownBy(() -> priceService.updatePrice(1L, 2L, dto))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -365,51 +381,19 @@ public class PriceServiceTest {
 
     @Test
     void deletePrice_shouldDeleteSuccessfully() {
-        Product product = Product.builder().id(1L).prices(new ArrayList<>()).build();
-        Price price = Price.builder().id(1L).value(BigDecimal.valueOf(100)).initDate(LocalDate.now()).build();
-        product.getPrices().add(price);
-
-        when(productService.getProductById(1L)).thenReturn(product);
-        when(priceRepository.findById(1L)).thenReturn(Optional.of(price));
+        when(priceRepository.deleteByIdAndProductId(1L, 1L)).thenReturn(1);
 
         priceService.deletePrice(1L, 1L);
 
-        verify(priceRepository).delete(price);
-        assert(product.getPrices().isEmpty());
-    }
-
-    @Test
-    void deletePrice_shouldThrow_whenProductNotFound() {
-        when(productService.getProductById(1L)).thenThrow(new IllegalArgumentException("Producto no encontrado"));
-
-        assertThatThrownBy(() -> priceService.deletePrice(1L, 1L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Producto no encontrado");
+        verify(priceRepository).deleteByIdAndProductId(1L, 1L);
     }
 
     @Test
     void deletePrice_shouldThrow_whenPriceNotFound() {
-        Product product = Product.builder().id(1L).prices(new ArrayList<>()).build();
-        when(productService.getProductById(1L)).thenReturn(product);
-        when(priceRepository.findById(1L)).thenReturn(Optional.empty());
+        when(priceRepository.deleteByIdAndProductId(1L, 1L)).thenReturn(0);
 
         assertThatThrownBy(() -> priceService.deletePrice(1L, 1L))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Precio no encontrado");
+                .hasMessage("Precio no encontrado para el producto especificado");
     }
-
-    @Test
-    void deletePrice_shouldThrow_whenPriceNotBelongToProduct() {
-        Product product = Product.builder().id(1L).prices(new ArrayList<>()).build();
-        Price price = Price.builder().id(1L).value(BigDecimal.valueOf(100)).initDate(LocalDate.now()).build();
-        // No añadimos el precio a la lista de product.getPrices()
-
-        when(productService.getProductById(1L)).thenReturn(product);
-        when(priceRepository.findById(1L)).thenReturn(Optional.of(price));
-
-        assertThatThrownBy(() -> priceService.deletePrice(1L, 1L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("El precio no pertenece al producto");
-    }
-
 }

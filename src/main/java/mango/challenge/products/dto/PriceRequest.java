@@ -10,8 +10,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PriceDTO {
-    private Long id;
+public class PriceRequest {
     private BigDecimal value;
     private LocalDate initDate;
     private LocalDate endDate;

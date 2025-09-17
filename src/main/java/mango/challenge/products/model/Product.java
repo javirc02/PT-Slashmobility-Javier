@@ -2,6 +2,7 @@ package mango.challenge.products.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import mango.challenge.products.dto.ProductRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,4 +32,8 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Price> prices;
 
+    public Product(ProductRequest request) {
+        this.name = request.getName();
+        this.description = request.getDescription();
+    }
 }

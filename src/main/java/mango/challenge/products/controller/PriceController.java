@@ -2,7 +2,8 @@ package mango.challenge.products.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import mango.challenge.products.dto.PriceDTO;
+import mango.challenge.products.dto.PriceRequest;
+import mango.challenge.products.dto.PriceResponse;
 import mango.challenge.products.service.PriceService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -20,34 +21,34 @@ public class PriceController {
     private final PriceService priceService;
 
     @PostMapping
-    public ResponseEntity<PriceDTO> addPrice(
+    public ResponseEntity<PriceResponse> addPrice(
             @PathVariable Long productId,
-            @Valid @RequestBody PriceDTO priceDTO
+            @Valid @RequestBody PriceRequest priceDTO
     ) {
-        PriceDTO created = priceService.addPrice(productId, priceDTO);
+        PriceResponse created = priceService.addPrice(productId, priceDTO);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<PriceDTO>> getPrices(
+    public ResponseEntity<List<PriceResponse>> getPrices(
             @PathVariable Long productId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         if (date != null) {
-            PriceDTO priceAtDate = priceService.getPriceAtDate(productId, date);
+            PriceResponse priceAtDate = priceService.getPriceAtDate(productId, date);
             return ResponseEntity.ok(List.of(priceAtDate));
         } else {
-            List<PriceDTO> prices = priceService.getPrices(productId);
+            List<PriceResponse> prices = priceService.getPrices(productId);
             return ResponseEntity.ok(prices);
         }
     }
 
     @PatchMapping("/{priceId}")
-    public ResponseEntity<PriceDTO> updatePrice(
+    public ResponseEntity<PriceResponse> updatePrice(
             @PathVariable Long productId,
             @PathVariable Long priceId,
-            @RequestBody PriceDTO priceDTO) {
-        PriceDTO updatedPrice = priceService.updatePrice(productId, priceId, priceDTO);
+            @RequestBody PriceRequest priceDTO) {
+        PriceResponse updatedPrice = priceService.updatePrice(productId, priceId, priceDTO);
         return ResponseEntity.ok(updatedPrice);
     }
 

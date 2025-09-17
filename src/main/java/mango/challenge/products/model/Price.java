@@ -1,6 +1,7 @@
 package mango.challenge.products.model;
 import jakarta.persistence.*;
 import lombok.*;
+import mango.challenge.products.dto.PriceRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -35,4 +36,12 @@ public class Price {
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+
+    public Price(PriceRequest request, Product product) {
+        this.value = request.getValue();
+        this.initDate = request.getInitDate();
+        this.endDate = request.getEndDate();
+        this.product = product;
+    }
 }

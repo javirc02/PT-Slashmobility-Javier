@@ -2,7 +2,8 @@ package mango.challenge.products.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import mango.challenge.products.dto.ProductDTO;
+import mango.challenge.products.dto.ProductRequest;
+import mango.challenge.products.dto.ProductResponse;
 import mango.challenge.products.model.Product;
 import mango.challenge.products.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -16,19 +17,9 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    public ProductDTO createProduct(ProductDTO productDTO) {
-        Product product = Product.builder()
-                .name(productDTO.getName())
-                .description(productDTO.getDescription())
-                .build();
-
-        Product savedProduct = productRepository.save(product);
-
-        return ProductDTO.builder()
-                .id(savedProduct.getId())
-                .name(savedProduct.getName())
-                .description(savedProduct.getDescription())
-                .build();
+    public ProductResponse createProduct(ProductRequest productRequest) {
+        Product savedProduct = productRepository.save(new Product(productRequest));
+        return new ProductResponse(savedProduct);
     }
 
     public Product getProductById(Long id) {
@@ -36,24 +27,13 @@ public class ProductService {
                 .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
     }
 
-    public ProductDTO getProductDtoById(Long id) {
-        Product product = getProductById(id);
-
-        //Podríamos rellenar los precios del producto llamando a getPrices(id) del PricesService si el sistema lo necesitase
-        return ProductDTO.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .description(product.getDescription())
-                .build();
+    public ProductResponse getProductResponseById(Long id) {
+        return new ProductResponse(getProductById(id));
     }
 
-    public List<ProductDTO> getAllProducts() {
+    public List<ProductResponse> getAllProducts() {
         return productRepository.findAll().stream()
-                .map(p -> ProductDTO.builder()
-                        .id(p.getId())
-                        .name(p.getName())
-                        .description(p.getDescription())
-                        .build())
+                .map(ProductResponse::new)
                 .toList();
     }
 }

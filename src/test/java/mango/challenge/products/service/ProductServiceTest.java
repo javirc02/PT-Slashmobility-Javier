@@ -1,6 +1,7 @@
 package mango.challenge.products.service;
 
-import mango.challenge.products.dto.ProductDTO;
+import mango.challenge.products.dto.ProductRequest;
+import mango.challenge.products.dto.ProductResponse;
 import mango.challenge.products.model.Product;
 import mango.challenge.products.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +29,7 @@ public class ProductServiceTest {
 
     @Test
     void createProduct_shouldSaveAndReturnProductDTO() {
-        ProductDTO dto = ProductDTO.builder()
+        ProductRequest reques = ProductRequest.builder()
                 .name("Zapatillas deportivas")
                 .description("Modelo edición limitada")
                 .build();
@@ -41,11 +42,11 @@ public class ProductServiceTest {
 
         when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
 
-        ProductDTO result = productService.createProduct(dto);
+        ProductResponse response = productService.createProduct(reques);
 
-        assertThat(result.getId()).isEqualTo(1L);
-        assertThat(result.getName()).isEqualTo(dto.getName());
-        assertThat(result.getDescription()).isEqualTo(dto.getDescription());
+        assertThat(response.getId()).isEqualTo(1L);
+        assertThat(response.getName()).isEqualTo(reques.getName());
+        assertThat(response.getDescription()).isEqualTo(reques.getDescription());
 
         ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
         verify(productRepository).save(productCaptor.capture());
@@ -88,11 +89,11 @@ public class ProductServiceTest {
 
         when(productRepository.findById(5L)).thenReturn(Optional.of(product));
 
-        ProductDTO dto = productService.getProductDtoById(5L);
+        ProductResponse response = productService.getProductResponseById(5L);
 
-        assertThat(dto).isNotNull();
-        assertThat(dto.getId()).isEqualTo(5L);
-        assertThat(dto.getName()).isEqualTo("Pantalón");
+        assertThat(response).isNotNull();
+        assertThat(response.getId()).isEqualTo(5L);
+        assertThat(response.getName()).isEqualTo("Pantalón");
     }
 
     @Test
@@ -104,10 +105,10 @@ public class ProductServiceTest {
 
         when(productRepository.findAll()).thenReturn(products);
 
-        List<ProductDTO> result = productService.getAllProducts();
+        List<ProductResponse> response = productService.getAllProducts();
 
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getName()).isEqualTo("Producto A");
-        assertThat(result.get(1).getName()).isEqualTo("Producto B");
+        assertThat(response).hasSize(2);
+        assertThat(response.get(0).getName()).isEqualTo("Producto A");
+        assertThat(response.get(1).getName()).isEqualTo("Producto B");
     }
 }
