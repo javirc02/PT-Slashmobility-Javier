@@ -1,6 +1,21 @@
 # Prueba Técnica – Sistema de Productos con Precios Históricos
 
-Este proyecto es la solución a la prueba técnica alojada en el repositorio https://github.com/adriancataland/senior-java-tech-challenge.git, consta de una **API REST** desarrollada con **Spring Boot**, enfocada en la gestión de productos y sus precios asociados. Incluye operaciones de CRUD para productos y precios, con validaciones de negocio, y documentación automática mediante **Springdoc OpenAPI**.
+Este proyecto es la solución a la prueba técnica alojada en el repositorio https://github.com/adriancataland/senior-java-tech-challenge.git. 
+
+Consta de una **API REST** desarrollada con **Spring Boot**, enfocada en la gestión de productos y sus precios asociados. 
+Incluye operaciones de CRUD para productos y precios, con validaciones de negocio, y documentación automática mediante **Springdoc OpenAPI**.
+
+
+---
+## Características
+- CRUD Completo: Gestión completa de productos y precios
+- Validaciones de Negocio: Control de solapamientos de fechas y precios 
+- API RESTful: Endpoints bien estructurados y documentados
+- Paginación: Soporte para consultas paginadas
+- Filtros Avanzados: Búsqueda por fechas, rangos de precios, etc.
+- Documentación Automática: OpenAPI/Swagger integrado
+- Manejo de Errores: Respuestas claras y consistentes
+- Base de Datos Versionada: Migraciones con Flyway
 
 ---
 ## Requisitos previos
@@ -18,24 +33,48 @@ Este proyecto es la solución a la prueba técnica alojada en el repositorio htt
 git clone https://github.com/javirc02/PT-Slashmobility-Javier.git
 cd senior-java-tech-challenge-mango
 ```
-### 2. Compila y ejecuta el proyecto usando Gradle:
+### 2. Configuración de la Base de Datos
+```bash
+# Crear base de datos en PostgreSQL
+CREATE DATABASE productsdb;
+
+# Crear usuario (opcional)
+CREATE USER postgres WITH PASSWORD 'postgres';
+GRANT ALL PRIVILEGES ON DATABASE productsdb TO postgres;
+```
+### 3. Compila y ejecuta el proyecto usando Gradle:
 ```bash
 ./gradlew build
 ./gradlew bootRun
 ```
-### 3. La API estará disponible en:
-```bash
+### 4. La API estará disponible en:
+```
 http://localhost:8080
 ```
-### 4. La documentación de la api se puede consultar en:
-```bash
-http://localhost:8080/swagger-ui.html
-```
-### 5. Los tests se ejecutan con:
+---
+## Documentación de la API
+Una vez ejecutado el proyecto, accede a:
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **OpenAPI JSON**: http://localhost:8080/v3/api-docs
+### Endpoints Principales
+| Método   | Endpoint                  | Descripción |
+|----------|---------------------------|-------------|
+| `GET`    | `/api/v1/products`        | Listar productos paginados |
+| `POST`   | `/api/v1/products`        | Crear nuevo producto |
+| `GET`    | `/api/v1/products/{id}`   | Obtener producto por ID |
+| `PATCH`  | `/api/v1/products/{id}`   | Actualizar producto parcialmente |
+| `DELETE` | `/api/v1/products/{id}`   | Eliminar producto |
+| `GET`    | `/api/v1/prices`          | Listar precios con filtros avanzados |
+| `POST`   | `/api/v1/prices`          | Crear nuevo precio |
+| `GET`    | `/api/v1/prices/{id}`     | Obtener precio por ID |
+
+---
+## Testing
+### Ejecutar tests
 ```bash
 ./gradlew test
 ```
-Se puede ver el resultado de los tests abriendo en un navegador el archivo generado en:
+### Reporte de testing
 ```
 products/build/reports/tests/test/packages/mango.challenge.products.service.html
 ```
@@ -76,25 +115,44 @@ products/build/reports/tests/test/packages/mango.challenge.products.service.html
 - Muy útil para gestionar la evolución de la base de datos de forma automática y controlada. Permite versionar la estructura y los datos iniciales mediante scripts numerados, garantizando que todos los entornos (desarrollo, pruebas y producción) tengan la misma configuración.
 - 
 ### Lombok
-- Utilizado para facilitar y agilizar el desarrollo con java, además de mantener el código mas limpio. Evita tener que definir manualmente tanto getters, setters, contructores o builders ya que al añadir las anotaciones pertinentes ya nos genera estos métodos.
+- Utilizado para facilitar y agilizar el desarrollo con java, además de mantener el código más limpio. Evita tener que definir manualmente tanto getters, setters, contructores o builders ya que al añadir las anotaciones pertinentes ya nos genera estos métodos.
 
-### Decisiones de diseño de la API
+## Decisiones de diseño de la API
 - Validaciones de negocio robustas (fechas, solapamientos, existencia de entidad).  
 - Manejo de errores mediante excepciones con mensajes claros para facilitar depuración.
 - Los endpoints de consulta de productos y precios incluyen los IDs correspondientes, permitiendo al usuario de la API identificar cada recurso y utilizarlos para llamar a otros endpoints relacionados.
-- Se utilizó **PATCH** para actualizar precios parcialmente sin sobrescribir otros campos.  
+- Se ha utilizado **PATCH** para actualizar precios parcialmente sin sobrescribir otros campos.  
 - Se ha definido versionado de los endpoints a nivel controlador, añadiendo en el ```@RequestMapping``` de cada controlador el número de versión. Por ejemplo la ruta para los products sería ```/api/v1/products```. 
   Esto permite que todos los endpoints de ese controlador vayan sobre la misma versión. En caso de que sea necesario modificar un endpoint de manera incompatible con versiones anteriores, se puede crear una nueva versión del controlador, por ejemplo ```/api/v2/products```, sin afectar a los clientes que aún utilizan la versión antigua.
 
-### Mejoras y supuestos
+## Mejoras y supuestos
 - Cada precio pertenece a un único producto.
 - Manejo de errores centralizado y claro.
 - Carga de ejemplos en la base de datos para simplificar las pruebas.
+- Colección de postman lista para ser importada para poder probar todos los endpoints.
 - Configuración lista para PostgreSQL con posibilidad de cambiar base de datos fácilmente.
 
+## 
 
+### Soporte multilenguaje y multi-moneda
+Actualmente no implemento soporte para distintos países, idiomas o monedas.
 
+Decido priorizar la gestión de productos y precios con validaciones de fechas y filtros porque el tiempo es un factor clave: implementar traducciones y precios por país habría requerido mucho más desarrollo y complejidad en la base de datos y la lógica de negocio.
 
+Si fuera a implementarlo, podría hacerlo así:
+
+- Crear una tabla ProductTranslation que almacene el productId, locale y las traducciones de name y description. 
+- Extender la tabla Price para incluir countryCode, currency y value en la moneda local.
+- Ajustar los endpoints para filtrar precios por país y convertir valores según la moneda seleccionada.
+- Añadir lógica para seleccionar la traducción correcta del producto según el idioma del usuario.
+
+---
+## Colección de postman
+Hay una colección de postman de ejemplo que podemos importar a nuestro entorno postman local para tener el acceso a los endpoints ya definido para facilitar la labor de prueba de la API.
+Este se encuentra en la ruta:
+```
+src/main/resources/ProductsAndPrices.postman_collection.json
+```
 
 
 
