@@ -28,11 +28,6 @@ public class PriceService {
     public PriceResponse addPrice(Long productId, PriceRequest priceRequest) {
         Product product = productService.getProductByIdOrThrow(productId);
 
-        // Validación de fechas
-        if (priceRequest.getEndDate() != null && priceRequest.getInitDate().isAfter(priceRequest.getEndDate())) {
-            throw new IllegalArgumentException("initDate debe ser menor que endDate");
-        }
-
         if (priceRepository.existsOverlappingPrice(
                 productId,
                 priceRequest.getInitDate(),

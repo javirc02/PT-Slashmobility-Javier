@@ -1,5 +1,6 @@
 package mango.challenge.products.dto;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -23,4 +24,8 @@ public class PriceRequest {
 
     private LocalDate endDate;
 
+    @AssertTrue(message = "initDate debe ser menor que endDate")
+    private boolean isValidDateRange() {
+        return endDate == null || initDate.isBefore(endDate) || initDate.isEqual(endDate);
+    }
 }
