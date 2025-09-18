@@ -5,27 +5,14 @@ Este proyecto es la solución a la prueba técnica alojada en el repositorio htt
 Consta de una **API REST** desarrollada con **Spring Boot**, enfocada en la gestión de productos y sus precios asociados. 
 Incluye operaciones de CRUD para productos y precios, con validaciones de negocio, y documentación automática mediante **Springdoc OpenAPI**.
 
-
 ---
-## Características
-- CRUD Completo: Gestión completa de productos y precios
-- Validaciones de Negocio: Control de solapamientos de fechas y precios 
-- API RESTful: Endpoints bien estructurados y documentados
-- Paginación: Soporte para consultas paginadas
-- Filtros Avanzados: Búsqueda por fechas, rangos de precios, etc.
-- Documentación Automática: OpenAPI/Swagger integrado
-- Manejo de Errores: Respuestas claras y consistentes
-- Base de Datos Versionada: Migraciones con Flyway
+## Instrucciones para compilar y ejecutar
 
----
-## Requisitos previos
-
+### Requisitos previos
 - **Java 21** instalado y configurado en el PATH.
 - **Gradle** instalado para compilar y ejecutar el proyecto.
 - **PostgreSQL** en ejecución con la base de datos `productsdb` creada.
 - Usuario de PostgreSQL con permisos de lectura/escritura (configurado en `application.yml`).
----
-## Instrucciones para compilar y ejecutar
 
 ### 1. Clona el repositorio:
 
@@ -53,7 +40,7 @@ http://localhost:8080
 ```
 ---
 ## Documentación de la API
-Una vez ejecutado el proyecto, accede a:
+Una vez ejecutado el proyecto, puedes acceder a la documentación de la API accediendo a:
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
 - **OpenAPI JSON**: http://localhost:8080/v3/api-docs
 ---
@@ -93,6 +80,23 @@ products/build/reports/tests/test/packages/mango.challenge.products.service.html
 - **Controlador:** Gestiona solicitudes HTTP y respuestas.  
 - **Service:** Contiene la lógica de negocio, validaciones y reglas de negocio.  
 - **Repository:** Encapsula la persistencia de datos y comunicación con la base de datos.
+```mermaid
+graph LR
+    Client[Cliente] -->|HTTP Request| Controller
+    Controller -->|Llama servicio| Service
+    Service -->|Usa repositorio| Repository
+    Repository -->|Consulta| Database[PostgreSQL]
+    Database -->|Resultados| Repository
+    Repository -->|Datos| Service
+    Service -->|Respuesta| Controller
+    Controller -->|HTTP Response| Client
+    
+    style Client fill:#bbdefb
+    style Controller fill:#e1f5fe
+    style Service fill:#f3e5f5
+    style Repository fill:#e8f5e8
+    style Database fill:#ffebee
+```
   
 **Beneficios:** Código más limpio, testable, mantenible y fácil de escalar. Ideal para este servicio de poca embergadura ya que otro tipo de arquitecturas habrían complicado innecesariamente la implementación.
 
@@ -120,7 +124,29 @@ products/build/reports/tests/test/packages/mango.challenge.products.service.html
 - Colección de postman lista para ser importada para poder probar todos los endpoints.
 - Configuración lista para PostgreSQL con posibilidad de cambiar base de datos fácilmente.
 
-## 
+## Implementaciones opcionales 
+
+### Endpoint para actualizar o eliminar precios
+Se han implementado los endpoints necesarios apra actualizar y eliminar precios.
+- **PATCH** /v1/products/{id}/prices/{id} : Permite modificar los campos que deseemos del precio de un producto 
+- **DELETE** /v1/products/{id}/prices/{id} : Elimina el precio
+
+### Documentación con swagger
+Mencionada en el apartado de **Instrucciones para compilar y ejecutar**.
+
+### Scripts para poblar la base de datos con casos de ejemplo 
+Definidos mediante flayway, por lo que se ejecuta al iniciar la aplicación.
+
+### Soporte para paginación, ordenamiento y filtrado en el historial de precios.
+Se ha modificado el endpoint de **/v1/products/{id}/prices** para que permita como parámetros:
+
+- `page` y `size`: controlan la paginación de los resultados.
+- `sort`: permite ordenar los precios por campos como `initDate` o `value`, en orden ascendente o descendente.
+- `date`: filtra el precio vigente para una fecha concreta.
+- `fromDate` y `toDate`: filtran los precios cuyo rango de fechas se solapa con el rango especificado.
+- `minValue` y `maxValue`: filtran los precios según su valor mínimo o máximo.
+
+Estos cambios permiten consultar de manera flexible los precios de un producto, tanto por rangos de fechas como por valores y ordenamiento, devolviendo resultados paginados.
 
 ### Soporte multilenguaje y multi-moneda
 Actualmente no implemento soporte para distintos países, idiomas o monedas.
