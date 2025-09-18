@@ -8,8 +8,10 @@ import mango.challenge.products.exception.ResourceNotFoundException;
 import mango.challenge.products.model.Price;
 import mango.challenge.products.model.Product;
 import mango.challenge.products.repository.PriceRepository;
+import mango.challenge.products.specifications.PriceSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -53,9 +55,15 @@ public class PriceService {
 
         productService.getProductByIdOrThrow(productId);
 
-        Page<PriceResponse> result = priceRepository.findByProductWithFilters(
-                productId, date, fromDate, toDate, minValue, maxValue, pageable
-        ).map(PriceResponse::new);
+        Specification<Price> spec = PriceSpecifications.hasProduct(productId)
+                .and(PriceSpecifications.matchesDate(date))
+                .and(PriceSpecifications.fromDate(fromDate))
+                .and(PriceSpecifications.toDate(toDate))
+                .and(PriceSpecifications.minValue(minValue))
+                .and(PriceSpecifications.maxValue(maxValue));
+
+        Page<PriceResponse> result = priceRepository.findAll(spec, pageable)
+                .map(PriceResponse::new);
 
         if (date != null && result.isEmpty()) {
             throw new IllegalArgumentException("No hay precio vigente para esta fecha");

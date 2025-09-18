@@ -41,7 +41,7 @@ public class PriceController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
             @RequestParam(required = false) BigDecimal minValue,
             @RequestParam(required = false) BigDecimal maxValue,
-            @PageableDefault(sort = "init_date", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(sort = "initDate", direction = Sort.Direction.DESC) Pageable pageable) {
 
         return priceService.getPrices(productId, date, fromDate, toDate, minValue, maxValue, pageable);
     }

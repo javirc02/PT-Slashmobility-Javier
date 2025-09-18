@@ -3,13 +3,13 @@ package mango.challenge.products.repository;
 import mango.challenge.products.model.Price;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Repository
@@ -32,28 +32,5 @@ public interface PriceRepository extends JpaRepository<Price, Long> {
                                    @Param("initDate") LocalDate initDate,
                                    @Param("endDate") LocalDate endDate);
 
-
-    @Query(value = """
-        SELECT p.*
-        FROM prices p
-        WHERE p.product_id = :productId
-          AND (CAST(:date AS DATE) IS NULL OR
-               (p.init_date <= CAST(:date AS DATE) AND
-               (p.end_date IS NULL OR CAST(:date AS DATE) <= p.end_date)))
-          AND (CAST(:fromDate AS DATE) IS NULL OR p.init_date >= CAST(:fromDate AS DATE))
-          AND (CAST(:toDate AS DATE) IS NULL OR
-               (p.end_date IS NOT NULL AND p.end_date <= CAST(:toDate AS DATE)))
-          AND (CAST(:minValue AS DECIMAL) IS NULL OR p.value >= CAST(:minValue AS DECIMAL))
-          AND (CAST(:maxValue AS DECIMAL) IS NULL OR p.value <= CAST(:maxValue AS DECIMAL))
-    """, nativeQuery = true)
-    Page<Price> findByProductWithFilters(
-            @Param("productId") Long productId,
-            @Param("date") LocalDate date,
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate,
-            @Param("minValue") BigDecimal minValue,
-            @Param("maxValue") BigDecimal maxValue,
-            Pageable pageable
-    );
-
+    Page<Price> findAll(Specification<Price> spec, Pageable pageable);
 }

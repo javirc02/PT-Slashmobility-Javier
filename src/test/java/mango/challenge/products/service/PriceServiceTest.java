@@ -9,7 +9,9 @@ import mango.challenge.products.repository.PriceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -180,8 +182,7 @@ public class PriceServiceTest {
                 .build();
 
         when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
-        when(priceRepository.findByProductWithFilters(eq(1L), eq(LocalDate.of(2025, 9, 5)),
-                isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+        when(priceRepository.findAll(ArgumentMatchers.<Specification<Price>>any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(p)));
 
         Page<PriceResponse> result = priceService.getPrices(1L, LocalDate.of(2025, 9, 5),
@@ -203,8 +204,7 @@ public class PriceServiceTest {
                 .build();
 
         when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
-        when(priceRepository.findByProductWithFilters(eq(1L), eq(LocalDate.of(2025, 12, 1)),
-                isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+        when(priceRepository.findAll(ArgumentMatchers.<Specification<Price>>any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(p)));
 
         Page<PriceResponse> result = priceService.getPrices(1L, LocalDate.of(2025, 12, 1),
@@ -218,8 +218,7 @@ public class PriceServiceTest {
     void shouldThrowException_whenNoPriceFoundForDate() {
         Product product = Product.builder().id(1L).build();
         when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
-        when(priceRepository.findByProductWithFilters(eq(1L), eq(LocalDate.of(2025, 9, 5)),
-                isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+        when(priceRepository.findAll(ArgumentMatchers.<Specification<Price>>any(), any(Pageable.class)))
                 .thenReturn(Page.empty());
 
         assertThatThrownBy(() -> priceService.getPrices(1L, LocalDate.of(2025, 9, 5),
@@ -246,7 +245,7 @@ public class PriceServiceTest {
         Price p2 = Price.builder().id(2L).value(BigDecimal.valueOf(20)).initDate(LocalDate.of(2025, 9, 2)).product(product).build();
 
         when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
-        when(priceRepository.findByProductWithFilters(eq(1L), isNull(), isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+        when(priceRepository.findAll(ArgumentMatchers.<Specification<Price>>any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(p1, p2)));
 
         Page<PriceResponse> result = priceService.getPrices(1L, null, null, null, null, null, PageRequest.of(0, 10));
@@ -261,7 +260,7 @@ public class PriceServiceTest {
         Price p2 = Price.builder().id(2L).value(BigDecimal.valueOf(20)).initDate(LocalDate.of(2025, 9, 1)).product(product).build();
 
         when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
-        when(priceRepository.findByProductWithFilters(eq(1L), isNull(), isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
+        when(priceRepository.findAll(ArgumentMatchers.<Specification<Price>>any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(p2, p1))); // simula ordenado
 
         Page<PriceResponse> result = priceService.getPrices(1L, null, null, null, null, null,
@@ -277,8 +276,7 @@ public class PriceServiceTest {
         Price p1 = Price.builder().id(1L).value(BigDecimal.valueOf(10)).initDate(LocalDate.of(2025, 9, 1)).product(product).build();
 
         when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
-        when(priceRepository.findByProductWithFilters(eq(1L), isNull(), eq(LocalDate.of(2025, 9, 1)),
-                eq(LocalDate.of(2025, 9, 30)), isNull(), isNull(), any(Pageable.class)))
+        when(priceRepository.findAll(ArgumentMatchers.<Specification<Price>>any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(p1)));
 
         Page<PriceResponse> result = priceService.getPrices(1L, null, LocalDate.of(2025, 9, 1),
@@ -294,8 +292,7 @@ public class PriceServiceTest {
         Price p1 = Price.builder().id(1L).value(BigDecimal.valueOf(15)).initDate(LocalDate.of(2025, 9, 1)).product(product).build();
 
         when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
-        when(priceRepository.findByProductWithFilters(eq(1L), isNull(), isNull(), isNull(),
-                eq(BigDecimal.valueOf(10)), eq(BigDecimal.valueOf(20)), any(Pageable.class)))
+        when(priceRepository.findAll(ArgumentMatchers.<Specification<Price>>any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(p1)));
 
         Page<PriceResponse> result = priceService.getPrices(1L, null, null, null,
@@ -315,13 +312,7 @@ public class PriceServiceTest {
                 .build();
 
         when(productService.getProductByIdOrThrow(1L)).thenReturn(product);
-        when(priceRepository.findByProductWithFilters(eq(1L),
-                eq(LocalDate.of(2025, 9, 10)),
-                eq(LocalDate.of(2025, 9, 1)),
-                eq(LocalDate.of(2025, 9, 30)),
-                eq(BigDecimal.valueOf(10)),
-                eq(BigDecimal.valueOf(20)),
-                any(Pageable.class)))
+        when(priceRepository.findAll(ArgumentMatchers.<Specification<Price>>any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(p1)));
 
         Page<PriceResponse> result = priceService.getPrices(1L, LocalDate.of(2025, 9, 10),
